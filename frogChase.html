@@ -1,24 +1,146 @@
 <!DOCTYPE html>
 <html>
   <head>
-  	<title>Snake Game</title>
-    <link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+  	<title>Frog Chase</title>
 
-  </head>
-
-  <body>
-    Score:<div id="score">0</div>
-    <canvas id="board" width="600" height="600"></canvas>
     <style>
+      #body{
+        
+        height:70%;
+        width: 70%;
+      }
       #board {
         background-image: url('swamp.jpg');
         background-size: cover;
         position: absolute;
-        top: 50%;
+        top: 48%;
+        z-index: 0;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-58%, -47%);
+
+      }
+      @font-face {
+        font-family: "mandalore"; 
+        src: url("MandaloreExpanded.otf"); /*URL to font*/
+      }
+      @font-face{
+        font-family: "piglet";
+        src: url("Piglet.ttf");
+      }
+      #borderRight{
+        position: absolute;
+        height:49%;
+        width: 11.4%;
+        left:53%;
+        top:25%;
+        background-color: orange;
+        /* background-image: url("pussInBoots.png");
+        background-size: contain;
+        background-repeat: no-repeat; */
+        
+      }
+      #borderRight img{
+        position: absolute;
+        left:36.5%;
+        height:100%;
+        z-index: 1;
+      }
+      #borderLeft{
+        position: absolute;
+        height: 49%;
+        width: 11.4%;
+        left: 25%;
+        top:25%;
+        background-color: orange;
+        transform: scaleX(-1);
+        /* background-image: url("pussInBoots.png");
+        background-size: contain;
+        background-repeat: no-repeat; */
+        
+      }
+      #borderLeft img{
+        position: absolute;
+        right:0%;
+        height:100%;
+        z-index: 1;
+      }
+      #borderTop{
+        position: absolute;
+        left:25%;
+        top: -3%;
+        z-index: 2;
+      }
+      #borderTop img{
+        width:117.7%;
+
+      }
+      #textWrap{
+        font-family: "piglet";
+        position: absolute;
+        width: fit-content;
+        z-index: 2;
+        top:-6%;
+        left: 55%;
+        font-size: 3em;
+      }
+      #borderBottom {
+        position: absolute;
+        top: 73%;
+        left: 25%;
+        z-index: 3;
+      }
+      #borderBottom img{
+
+        width: 78.75%;
+      }
+      #outerLeft{
+        position: absolute;
+        width:fit-content;
+        height:69%;
+        top:0%;
+        left:-2%;
+        z-index: 0;
+      }
+      #outerLeft img{
+        
+        height: 140%;
+      }
+      #outerRight{
+        position: absolute;
+        right:9%;
+        top:0%
+      }
+      #outerRight img{
+        width:125.1%;
       }
     </style>
+  </head>
+
+  <body>
+    <div id="borderTop">
+      <img src="poohBanner.jpg">
+      <div id = "textWrap">
+        <h1>Happy Birthday Simon!</h1>
+      </div>
+    </div>
+    <div id="borderRight">
+      <img src="pussInBoots.png">
+    </div>
+    <div>
+      <canvas id="board" width="600" height="640"></canvas>
+    </div>
+    <div id="outerLeft">
+      <img src="Dino.png">
+    </div>
+    <div id="borderLeft">
+      <img src="pussInBoots.png">
+    </div>
+    <div id="outerRight">
+      <img src="lego.png">
+    </div>
+    <div id="borderBottom">
+      <img src="pokemon.jpg">
+    </div>
   </body>
 
   <script>
@@ -36,10 +158,9 @@
     frogs.src = 'frog.png';
     const board_border = 'black';
     const board_background = "#FF000000";
-    const snake_col = 'lightblue';
-    const snake_border = 'darkblue';
     // let frogPos = new food();
-    let snake = [
+    let velocity = 0;
+    let playerToken = [
       {x: 300, y: 300}
     //   {x: 190, y: 200}
     //   {x: 180, y: 200},
@@ -55,13 +176,13 @@
         let dx = 0;
         // Vertical velocity
         let dy = 0;
-    let spawnRate = 10000 - (score*2);
-
+    
         // Get the canvas element
 
     const board = document.getElementById("board");
     // Return a two dimensional drawing context
     const board_ctx = board.getContext("2d");
+    
     // Start game
     main();
     document.addEventListener("keydown", change_direction);
@@ -69,16 +190,17 @@
     gen_food();
     setInterval(function onTick(){
         gen_food();
-    }, spawnRate)
+    }, 4000)
     function main() {
         wall_hit();
-        changing_direction = false;
+        // changing_direction = false;
         setTimeout(function onTick() {
         clear_board();        
         move_food();     
         drawFood();
         drawPlayer();
-        move_snake();
+        drawScore();
+        move_player();
         // Call main again
         main();
       }, 10)
@@ -95,11 +217,19 @@
       // Draw a "border" around the entire canvas
       board_ctx.strokeRect(0, 0, board.width, board.height);
       board_ctx.clearRect(1, 1, board.width-2, board.height-2);
-    }
+
     
-    // Draw the snake on the canvas
+    }
+    function drawScore(){
+      let text = "Score: " + score;
+      board_ctx.fillStyle= "ivory";
+      board_ctx.font = "italic bold 35pt mandalore";
+    //syntax : .fillText("text", x, y)
+      board_ctx.fillText(text,30,80);
+    }
+    // Draw the player on the canvas
     function drawPlayer() {
-        board_ctx.drawImage(player, snake[0].x, snake[0].y, 20, 20);
+        board_ctx.drawImage(player, playerToken[0].x, playerToken[0].y, 40, 40);
     }
 
     function random_food(min, max) {
@@ -108,28 +238,16 @@
 
     function gen_food() {
       // Generate a random number the food x-coordinate
-      
-    //   board_ctx.clearRect(food_x, food_y, 100, 100);
       food_x = random_food(0, board.width - 10);
       // Generate a random number for the food y-coordinate
       food_y = random_food(0, board.height - 10);
-    //   frogPos = (food_x, food_y);
 
-    //   const has_eaten = snake[0].x == food_x-10 && snake[0].y == food_y;
-    //     if (has_eaten) gen_food();
-      
-      // if the new food location is where the snake currently is, generate a new food location
-    //   snake.forEach(function has_snake_eaten_food(part) {
-    //     const has_eaten = part.x == food_x && part.y == food_y;
-    //     if (has_eaten) gen_food();
-    //   }
-    //   );
     move_food();
-
+    
       
     }
     function drawFood() {
-      board_ctx.drawImage(frogs, food_x, food_y, 10, 10);
+      board_ctx.drawImage(frogs, food_x, food_y, 20, 20);
     }
     function move_food(){
         // Have the food move randomly to simulate that it is alive.
@@ -138,27 +256,22 @@
         
         let rand = Math.floor(Math.random()*4);
         if(rand === 0){
-        food_y = food_y + .5;
+        food_y = food_y + 1;
         board_ctx.clearRect(1, 1, board.width-2, board.height-2);
     }
     else if(rand === 1){
-        food_y = food_y - .5;
+        food_y = food_y - 1;
         board_ctx.clearRect(1, 1, board.width-2, board.height-2);
     }
     else if(rand == 2){
-        food_x = food_x - .5;
+        food_x = food_x - 1;
         board_ctx.clearRect(1, 1, board.width-2, board.height-2);
       }
       else{
-        food_x = food_x + .5;
+        food_x = food_x + 1;
         board_ctx.clearRect(1, 1, board.width-2, board.height-2);
         }
 
-     
-//     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-// // Add the new head to the beginning of snake body
-//       snake.unshift(head);
-//       snake.pop();
     }
     
     function change_direction(event) {
@@ -167,85 +280,55 @@
       const UP_KEY = 38;
       const DOWN_KEY = 40;
       
-    // Prevent the snake from reversing
-    
-      if (changing_direction) return;
-      changing_direction = true;
       const keyPressed = event.keyCode;
       const goingUp = dy === -2;
       const goingDown = dy === 2;
       const goingRight = dx === 2;
       const goingLeft = dx === -2;
       if (keyPressed === LEFT_KEY) {
-        dx = -2;
+        dx = -2 - velocity;
         dy = 0;
       }
       if (keyPressed === UP_KEY) {
         dx = 0;
-        dy = -2;
+        dy = -2 - velocity;
       }
       if (keyPressed === RIGHT_KEY) {
-        dx = 2;
+        dx = 2 + velocity;
         dy = 0;
       }
       if (keyPressed === DOWN_KEY) {
         dx = 0;
-        dy = 2;
+        dy = 2 + velocity;
       }
       wall_hit();
     }
-        function has_game_ended() {
-      for (let i = 0; i < snake.length; i++) {
-        if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true
-      }
-      const hitLeftWall = snake[0].x < 0;
-      const hitRightWall = snake[0].x > board.width - 20;
-      const hitToptWall = snake[0].y < 0;
-      const hitBottomWall = snake[0].y > board.height - 10;
-      return hitLeftWall || hitRightWall || hitToptWall || hitBottomWall
-    }
     function wall_hit(){
-      if (snake[0].x <= 0){
+      if (playerToken[0].x <= -10){
         dx += 2;
       }
-      else if (snake[0].x >= board.width -20){
+      else if (playerToken[0].x >= board.width -10){
         dx -= 2;
       }
-      else if (snake[0].y <= 0){
+      else if (playerToken[0].y <= -10){
         dy += 2;
       }
-      else if (snake[0].y >= board.width -20){
+      else if (playerToken[0].y >= board.height -10){
         dy -= 2;
       }
     }
 
-    function move_snake() {
-      // Create the new Snake's head
-    //   dy = 0;
-    //   dx = 0;
-    //   let rand = Math.floor(Math.random()*4);
-    //   if(rand === 0){
-    //     dy += 10;
-    //   }
-    //   else if(rand === 1){
-    //     dy -= 10;
-    //   }
-    //   else if(rand == 2){
-    //     dx -= 10;
-    //   }
-    //   else{
-    //     dx += 10;
-    //   }
-    const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-    // Add the new head to the beginning of snake body
-    snake.unshift(head);
-    snake.pop();
-    const has_eaten_food = food_x > snake[0].x-5 && food_y > snake[0].y-5 && food_x < snake[0].x + 20 && food_y < snake[0].y +20;
+    function move_player() {
+    const head = {x: playerToken[0].x + dx, y: playerToken[0].y + dy};
+    // remove then create new token
+    playerToken.unshift(head);
+    playerToken.pop();
+    const has_eaten_food = food_x > playerToken[0].x-5 && food_y > playerToken[0].y-5 && food_x < playerToken[0].x + 20 && food_y < playerToken[0].y +20;
       if (has_eaten_food) {
+        //speed up player
+        velocity += .25;
         // Increase score
         score += 100;
-        // Display score on screen
-        document.getElementById('score').innerHTML = score;
         // Generate new food location
         gen_food();
     }
