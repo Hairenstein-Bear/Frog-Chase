@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<title>Frog Chase</title>
+
+    <style>
+      #body{
+        
+        height:70%;
+        width: 70%;
+      }
+      #board {
+        /* background-image: url('swamp.jpg'); */
+        background-size: cover;
+        position: absolute;
+        top: 48%;
+        z-index: 0;
+        left: 50%;
+        transform: translate(-58%, -47%);
+
+      }
+      @font-face {
+        font-family: "mandalore"; 
+        src: url("MandaloreExpanded.otf"); /*URL to font*/
+      }
+      @font-face{
+        font-family: "piglet";
+        src: url("Piglet.ttf");
+      }
+      /* #borderRight{
+        position: absolute;
+        height:49%;
+        width: 11.4%;
+        left:53%;
+        top:25%;
+        background-color: orange;
+
+        
+      } 
+      /* #borderRight img{
+        position: absolute;
+        left:36.5%;
+        height:100%;
+        z-index: 1;
+      }
+      #borderLeft{
+        position: absolute;
+        height: 49%;
+        width: 11.4%;
+        left: 25%;
+        top:25%;
+        background-color: orange;
+        transform: scaleX(-1);
+        /* background-image: url("pussInBoots.png");
+        background-size: contain;
+        background-repeat: no-repeat; 
+        
+      } 
+       #borderLeft img{
+        position: absolute;
+        right:0%;
+        height:100%;
+        z-index: 1;
+      }
+      #borderTop{
+        position: absolute;
+        left:25%;
+        top: -3%;
+        z-index: 2;
+      }
+      #borderTop img{
+        width:117.7%;
+
+      }
+      #textWrap{
+        font-family: "piglet";
+        position: absolute;
+        width: fit-content;
+        z-index: 2;
+        top:-6%;
+        left: 55%;
+        font-size: 3em;
+      }
+      #borderBottom {
+        position: absolute;
+        top: 73%;
+        left: 25%;
+        z-index: 3;
+      }
+      #borderBottom img{
+
+        width: 78.75%;
+      }
+      #outerLeft{
+        position: absolute;
+        width:fit-content;
+        height:69%;
+        top:0%;
+        left:-2%;
+        z-index: 0;
+      }
+      #outerLeft img{
+        
+        height: 140%;
+      }
+      #outerRight{
+        position: absolute;
+        right:9%;
+        top:0%
+      }
+      #outerRight img{
+        width:125.1%;
+      } */
+    </style>
+  </head>
+
+  <body>
+    <!-- <div id="borderTop">
+      <img src="poohBanner.jpg">
+      <div id = "textWrap">
+        <h1>Happy Birthday Simon!</h1>
+      </div>
+    </div>
+    <div id="borderRight">
+      <img src="pussInBoots.png">
+    </div> -->
+    <div>
+      <canvas id="board" width="600" height="640"></canvas>
+    </div>
+    <!-- <div id="outerLeft">
+      <img src="Dino.png">
+    </div>
+    <div id="borderLeft">
+      <img src="pussInBoots.png">
+    </div>
+    <div id="outerRight">
+      <img src="lego.png">
+    </div>
+    <div id="borderBottom">
+      <img src="pokemon.jpg">
+    </div> -->
+  </body>
+
+  <script>
+    class food {
+        constructor() {
+            this.x ="",
+            this.y ="";
+        }
+    }
+    let score = 0;
+
+    //////////////////////////////////////////////////
+    ///////////////////Game Elements//////////////////
+    /////////////////////////////////////////////////
+    document.getElementById("board").style.backgroundImage="url('swamp.jpg')";
+    
+    const player = new Image();
+    player.src = 'grogu.png';
+    const frogs = new Image();
+    frogs.src = 'frog.png';
+    const board_border = 'black';
+    const board_background = "#FF000000";
+    let level = 1;
+    let movement = {dx: 0, dy: 0};
+    let velocity = 0;
+    let frogList = [];
+    let playerToken = [
+      {x: 300, y: 300}
+    //   {x: 190, y: 200}
+    //   {x: 180, y: 200},
+    //   {x: 170, y: 200},
+    //   {x: 160, y: 200}
+    ]
+    ////////////////////////////////////////
+    /////////////Movement///////////////////
+    ///////////////////////////////////////
+     // True if changing direction
+     let changing_direction = false;
+        // Horizontal velocity
+      let dx = 0;
+        // Vertical velocity
+      let dy = 0;
+
+
+        // Get the canvas element
+    const board = document.getElementById("board");
+    // Return a two dimensional drawing context
+    const board_ctx = board.getContext("2d");
+    
+    // Start game
+    main();
+    document.addEventListener("keydown", change_direction);
+    
+    gen_food();
+    setInterval(function onTick(){
+        gen_food();
+    }, 4000)
+    function main() {
+        wall_hit();
+        // changing_direction = false;
+        setTimeout(function onTick() {
+        clear_board();        
+        move_food();     
+        drawFood();
+        drawPlayer();
+        drawUI();
+        move_player();
+        // Call main again
+        main();
+      }, 10)
+    }
+    
+    // draw a border around the canvas
+    function clear_board() {
+      //  Select the colour to fill the drawing
+      board_ctx.fillStyle = board_background;
+      //  Select the colour for the border of the canvas
+      board_ctx.strokestyle = board_border;
+      // Draw a "filled" rectangle to cover the entire canvas
+    //   board_ctx.fillRect(0, 0, board.width, board.height);
+      // Draw a "border" around the entire canvas
+      board_ctx.strokeRect(0, 0, board.width, board.height);
+      board_ctx.clearRect(1, 1, board.width-2, board.height-2);
+    }
+
+
+    /////////////////////////////////////////////
+    /////////////UI for level and score/////////
+    ///////////////////////////////////////////
+    function drawScore(){
+      let text = "Score: " + score;
+      board_ctx.fillStyle= "ivory";
+      board_ctx.font = "italic bold 35pt mandalore";
+      //syntax : .fillText("text", x, y)
+      board_ctx.fillText(text,30,80);
+    }
+    function drawLevel(){
+      let text = "Level: " + level;
+      board_ctx.fillStyle= "ivory";
+      board_ctx.font = "italic bold 35pt mandalore";
+      //syntax : .fillText("text", x, y)
+      board_ctx.fillText(text,400,80);
+    }
+    function drawUI(){
+      drawScore();
+      drawLevel();
+    }
+
+
+    // Draw the player on the canvas
+    function drawPlayer() {
+        board_ctx.drawImage(player, playerToken[0].x, playerToken[0].y, 40, 40);
+    }
+
+    function random_food(min, max) {
+      return Math.round((Math.random() * (max-min) + min) / 10) * 10;
+    }
+
+    function gen_food() {
+      // Generate a random number the food x-coordinate
+      if(frogList.length < 5){
+      let frog = {
+        "x": random_food(0, board.width - 10),
+        "y": random_food(0, board.height - 10)
+      }
+      frogList.unshift(frog);
+    }
+      // move_food();
+    }
+    function drawFood() {
+      for (let i=0; i< frogList.length; i++){
+        // console.log(frogList[i]);
+        board_ctx.drawImage(frogs, frogList[i].x, frogList[i].y, 20, 20);
+      }
+    }
+    function move_food(){
+        // Have the food move randomly to simulate that it is alive.
+      for(let i=0; i< frogList.length; i++){
+        let rand = Math.floor(Math.random()*4);
+        if(rand === 0){
+        frogList[i].y = frogList[i].y + 1;
+        board_ctx.clearRect(1, 1, board.width-2, board.height-2);
+    }
+    else if(rand === 1){
+      frogList[i].y = frogList[i].y - 1;
+        board_ctx.clearRect(1, 1, board.width-2, board.height-2);
+    }
+    else if(rand == 2){
+      frogList[i].x = frogList[i].x - 1;
+        board_ctx.clearRect(1, 1, board.width-2, board.height-2);
+      }
+      else{
+        frogList[i].x = frogList[i].x + 1;
+        board_ctx.clearRect(1, 1, board.width-2, board.height-2);
+        }
+      }
+    }
+    function stopDirection() {
+      const LEFT_KEY = "ArrowLeft";
+      const RIGHT_KEY = "ArrowRight";
+      const UP_KEY = "ArrowUp";
+      const DOWN_KEY = "ArrowDown";
+      const SPACE = " ";
+      const keyReleased = event.key;
+
+      if (keyReleased === LEFT_KEY) {
+        movement.dx = movement.dx + 1;
+        document.addEventListener("keydown", change_direction);
+      }
+      if (keyReleased === UP_KEY) {
+        movement.dy = movement.dy + 1;
+        document.addEventListener("keydown", change_direction);
+      }
+      if (keyReleased === RIGHT_KEY) {
+        movement.dx = movement.dx - 1;
+        document.addEventListener("keydown", change_direction);
+      }
+      if (keyReleased === DOWN_KEY) {
+        movement.dy = movement.dy - 1;
+        document.addEventListener("keydown", change_direction);
+      }
+    }
+    function change_direction(event) {
+      const LEFT_KEY = "ArrowLeft";
+      const RIGHT_KEY = "ArrowRight";
+      const UP_KEY = "ArrowUp";
+      const DOWN_KEY = "ArrowDown";
+      const SPACE = " ";
+      
+      const keyPressed = event.key;
+
+      if (keyPressed === LEFT_KEY) {
+        movement.dx = -2 - velocity;
+        document.addEventListener("keyup", stopDirection);
+      }
+      if (keyPressed === UP_KEY) {
+        movement.dy = -2 - velocity;
+        document.addEventListener("keyup", stopDirection);
+      }
+      if (keyPressed === RIGHT_KEY) {
+        movement.dx = 2 + velocity;
+        document.addEventListener("keyup", stopDirection);
+      }
+      if (keyPressed === DOWN_KEY) {
+        movement.dy = 2 + velocity;
+        document.addEventListener("keyup", stopDirection);
+      }
+      if (keyPressed === SPACE) {
+        movement.dx = 0;
+        movement.dy = 0;
+      }
+      wall_hit();
+    }
+    function wall_hit(){
+      if (playerToken[0].x <= 10){
+        dx += 2;
+      }
+      else if (playerToken[0].x >= board.width){
+        dx -= 2;
+      }
+      else if (playerToken[0].y <= -10){
+        dy += 2;
+      }
+      else if (playerToken[0].y >= board.height -10){
+        dy -= 2;
+      }
+    }
+    function move_player() {
+      function playerPos(playerToken){
+        for(let i = 0; i< frogList.length; i++){
+          if (frogList[i].x >= playerToken.x-10 && frogList[i].x <= playerToken.x+28){
+            if (frogList[i].y >= playerToken.y-20 && frogList[i].y <= playerToken.y+40){
+              frogList = frogList.slice(i+1, frogList.length+1);
+              gen_food();
+              return true;
+            }
+          }
+          return false;
+        }
+      }
+      const head = {x: playerToken[0].x + movement.dx, y: playerToken[0].y + movement.dy};
+      // remove then create new token
+      playerToken.unshift(head);
+      playerToken.pop();
+      const player = playerToken[0];
+    let has_eaten_food = false;
+    // console.log(playerToken[0])
+    if (playerPos(playerToken[0])){
+      has_eaten_food = true;
+    }
+      if (has_eaten_food) {
+        //speed up player
+        // velocity += .5;
+        // Increase score
+        score += 100;
+        // Generate new food location
+      if (score > 499.5 && score < 500.5){
+        document.getElementById("board").style.backgroundImage="url('swampNext.jpg')";
+        frogList = [];
+        level = level + 1;
+      }
+      wall_hit();
+      has_eaten_food = false;
+      }
+    }
+    // const has_eaten_food = food_x > playerToken[0].x-5 && food_y > playerToken[0].y-5 && food_x < playerToken[0].x + 20 && food_y < playerToken[0].y +20;
+      
+    
+
+
+  </script>
+</html>
+
