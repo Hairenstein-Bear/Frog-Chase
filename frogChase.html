@@ -7,7 +7,7 @@
       #body{
         
         height:70%;
-        width: 70%;
+        width: 150em;
       }
       #board {
         background-image: url('swamp.jpg');
@@ -326,7 +326,7 @@
     const has_eaten_food = food_x > playerToken[0].x-5 && food_y > playerToken[0].y-5 && food_x < playerToken[0].x + 20 && food_y < playerToken[0].y +20;
       if (has_eaten_food) {
         //speed up player
-        velocity += .25;
+        velocity += .5;
         // Increase score
         score += 100;
         // Generate new food location
