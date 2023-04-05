@@ -151,8 +151,10 @@
     //////////////////////////////////////////////////
     ///////////////////Game Elements//////////////////
     /////////////////////////////////////////////////
-    document.getElementById("board").style.backgroundImage="url('swamp.jpg')";
-    
+    const backgrounds = ["swamp.jpg","swampNext.jpg","swamp3.jpg"];
+    let backgroundIndex = 0;
+    document.getElementById("board").style.backgroundImage=`url(${backgrounds[backgroundIndex]})`;
+    let level = (score/500)+1;
     const player = new Image();
     player.src = 'grogu.png';
     const frogs = new Image();
@@ -161,7 +163,6 @@
     trooper.src = 'trooper.png';
     const board_border = 'black';
     const board_background = "#FF000000";
-    let level = (score/500)+1;
     let movement = {dx: 0, dy: 0};
     let velocity = 0;
     let frogList = [];
@@ -332,19 +333,19 @@
       const keyReleased = event.key;
 
       if (keyReleased === LEFT_KEY) {
-        movement.dx = movement.dx + 1;
+        movement.dx = movement.dx + 1 + velocity;
         document.addEventListener("keydown", change_direction);
       }
       if (keyReleased === UP_KEY) {
-        movement.dy = movement.dy + 1;
+        movement.dy = movement.dy + 1 + velocity;
         document.addEventListener("keydown", change_direction);
       }
       if (keyReleased === RIGHT_KEY) {
-        movement.dx = movement.dx - 1;
+        movement.dx = movement.dx - 1 - velocity;
         document.addEventListener("keydown", change_direction);
       }
       if (keyReleased === DOWN_KEY) {
-        movement.dy = movement.dy - 1;
+        movement.dy = movement.dy - 1 - velocity;
         document.addEventListener("keydown", change_direction);
       }
     }
@@ -406,7 +407,13 @@
       score += 100;
       velocity +=.25;
       if (score%500 === 0){
-        document.getElementById("board").style.backgroundImage="url('swampNext.jpg')";
+        if (backgroundIndex > 1){
+          backgroundIndex = 0;
+        }
+        else{
+          backgroundIndex++;
+        }
+        document.getElementById("board").style.backgroundImage=`url(${backgrounds[backgroundIndex]})`;
         frogList = [];
         level = level+1;
       }
