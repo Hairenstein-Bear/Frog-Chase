@@ -147,7 +147,6 @@
   <script>
 
     let score = 0;
-
     //////////////////////////////////////////////////
     ///////////////////Game Elements//////////////////
     /////////////////////////////////////////////////
@@ -161,19 +160,24 @@
     frogs.src = 'frog.png';
     const trooper = new Image();
     trooper.src = 'trooper.png';
+    const bossRoom = new Image();
+    bossRoom.src = "corridor.png"
+    const boss = new Image();
+    boss.src = 'moff.png';
     const board_border = 'black';
     const board_background = "#FF000000";
+    let scroll;
+    let imgHeight = 0;
+    let scrollSpeed = 1.25;
     let movement = {dx: 0, dy: 0};
     let velocity = 0;
     let frogList = [];
     let enemyList = [];
+    let bossToken = {x: 300, y: 550, health: 3};
     let playerToken = [
-      {x: 300, y: 300}
-    //   {x: 190, y: 200}
-    //   {x: 180, y: 200},
-    //   {x: 170, y: 200},
-    //   {x: 160, y: 200}
+      {x: 300, y: 300, force: 0}
     ]
+    let force = playerToken[0].force;
     ////////////////////////////////////////
     /////////////Movement///////////////////
     ///////////////////////////////////////
@@ -217,7 +221,23 @@
         main();
       }, 10)
     }
-    
+    function loop()
+      {
+        imgHeight += scrollSpeed;
+        if(imgHeight >= board.height){
+          imgHeight = 0;
+        }
+        trooper.src='shadow.png';
+        board_ctx.drawImage(bossRoom, 0, imgHeight);
+        board_ctx.drawImage(bossRoom, 0, imgHeight - board.height);
+        drawFood();
+        drawPlayer();
+        drawUI();
+        drawEnemy();
+        drawBoss();
+        moveBoss();
+        scroll = window.requestAnimationFrame(loop);
+      }
     // draw a border around the canvas
     function clear_board() {
       //  Select the colour to fill the drawing
@@ -249,15 +269,24 @@
       //syntax : .fillText("text", x, y)
       board_ctx.fillText(text,400,80);
     }
+    function drawForce(){
+      console.log(playerToken[0].force);
+      let text = "Force: " + force;
+      board_ctx.fillStyle= "ivory";
+      board_ctx.font = "italic bold 35pt mandalore";
+      //syntax : .fillText("text", x, y)
+      board_ctx.fillText(text,235,80);
+    }
     function drawUI(){
       drawScore();
       drawLevel();
+      drawForce();
     }
 
 
     // Draw the player on the canvas
     function drawPlayer() {
-        board_ctx.drawImage(player, playerToken[0].x, playerToken[0].y, 40, 40);
+        board_ctx.drawImage(player, playerToken[0].x, playerToken[0].y, 20, 20);
     }
 
     function random_food(min, max) {
@@ -266,6 +295,12 @@
     function gen_enemy() {
       // Generate a random number the food x-coordinate
       if(enemyList.length < 25){
+        if(level % 5 === 0){
+          let enemy = {
+          "x": random_food(150, board.width - 150),
+          "y": random_food(0, board.height - 10)
+          }
+      }
       let enemy = {
         "x": random_food(0, board.width - 10),
         "y": random_food(0, board.height - 10)
@@ -283,11 +318,20 @@
     function gen_food() {
       // Generate a random number the food x-coordinate
       if(frogList.length < 5){
+        if(level % 5 === 0){
+          let frog = {
+        "x": random_food(50, board.width - 50),
+        "y": random_food(0, board.height - 10)
+      }
+      frogList.unshift(frog);
+        }
+        if (level % 5 != 0){
       let frog = {
         "x": random_food(0, board.width - 10),
         "y": random_food(0, board.height - 10)
       }
       frogList.unshift(frog);
+    }
     }
       // move_food();
     }
@@ -359,6 +403,9 @@
       const keyPressed = event.key;
 
       if (keyPressed === LEFT_KEY) {
+        if(level % 5 === 0 && playerToken[0].x > board.width -85){
+          playerToken[0].x = board.width - 90;
+        }
         movement.dx = -2 - velocity;
         document.addEventListener("keyup", stopDirection);
       }
@@ -367,6 +414,9 @@
         document.addEventListener("keyup", stopDirection);
       }
       if (keyPressed === RIGHT_KEY) {
+        if(level % 5 === 0 && playerToken[0].x < 70){
+          playerToken[0].x = 75
+        }
         movement.dx = 2 + velocity;
         document.addEventListener("keyup", stopDirection);
       }
@@ -375,12 +425,38 @@
         document.addEventListener("keyup", stopDirection);
       }
       if (keyPressed === SPACE) {
+        if(force > 2){
+        bossToken.health = bossToken.health -1;
+        force = force - 3;
+        }
+        // console.log("player X: "+playerToken[0].x+"player Y: "+playerToken[0].y+"Boss X: "+boss.x+"Boss Y: "+boss.y);
+        if(bossToken.health === 0){
+          alert("you defeated moff gideon");
+          level = level+1;
+          window.cancelAnimationFrame(scroll);
+          enemyList = [];
+          trooper.src = 'trooper.png';
+        }
         movement.dx = 0;
         movement.dy = 0;
       }
       wall_hit();
     }
     function wall_hit(){
+      if (level % 5 === 0){
+        if (playerToken[0].x < 70){
+        movement.dx = 0;
+      }
+      else if (playerToken[0].x > board.width-85){
+        movement.dx = 0;
+      }
+      else if (playerToken[0].y < 0){
+        movement.dy = 0;
+      }
+      else if (playerToken[0].y > board.height -30){
+        movement.dy = 0;
+      }
+      }
       if (playerToken[0].x < -1){
         playerToken[0].x = board.width-40;
       }
@@ -402,11 +478,19 @@
       }
     }
     function foodEaten(index){
-      console.log(playerToken[0].x, playerToken[0].y)
       frogList.splice(index, 1);
-      score += 100;
       velocity +=.25;
-      if (score%500 === 0){
+      force = force+1;
+      if(level % 5 === 0){
+        console.log("works");
+        scrollSpeed = scrollSpeed + .1;
+        // window.cancelAnimationFrame(scroll);
+        // scroll = window.requestAnimationFrame(loop);
+        // loop();
+      }
+      if(level %5 != 0){
+      score += 500;
+      if (score % 500 === 0){
         if (backgroundIndex > 1){
           backgroundIndex = 0;
         }
@@ -415,29 +499,97 @@
         }
         document.getElementById("board").style.backgroundImage=`url(${backgrounds[backgroundIndex]})`;
         frogList = [];
-        level = level+1;
+        level = level+4;
       }
-    }
+        if (level % 5 === 0){
+          playerToken[0].x = 300;
+          bossFight();
+        }
+        if ((level-1) % 5 === 0){
+          window.cancelAnimationFrame(scroll);
+          enemyList = [];
+          trooper.src = 'trooper.png';
+        }
+        }
+      }
+    
     function checkEnemy(){
       for(let i=0; i< enemyList.length; i++){
         if (enemyList[i].x >= playerToken[0].x-10 && enemyList[i].x <= playerToken[0].x+28 && enemyList[i].y <= playerToken[0].y+40 && enemyList[i].y >= playerToken[0].y-20){
-          enemyHit();
+          enemyHit(i,enemyList[i]);
         }
       }
     }
-    function enemyHit(){
-      alert("Game Over! High Score: "+score);
-      window.location.reload();
+    function enemyHit(index){
+      if(level % 5 === 0){
+        enemyList.splice(index, 1);
+        scrollSpeed = scrollSpeed - .1;
+      }
+      else{
+        alert("Game Over! High Score: "+score);
+        window.location.reload();
+      }
     }
     function move_player() {
+      console.log("player token"+playerToken[0].y);
+        console.log("boss token"+bossToken.y);
       const head = {x: playerToken[0].x + movement.dx, y: playerToken[0].y + movement.dy};
       // remove then create new token
       playerToken.unshift(head);
       playerToken.pop();
       const player = playerToken[0];
       wall_hit();
+    }
+    function moveBoss(){
+        let bossSpeed = 3.5 - scrollSpeed ;
+        let bossXDistance = bossToken.x - playerToken[0].x; 
+        let bossYDistance = bossToken.y - playerToken[0].y;
+                         
+        // let bossYSpeed = 1.75 - scrollSpeed ;
+        // bossToken.y = bossToken.y - bossSpeed;
+      // if(bossXDistance === 0 || bossXDistance < .1 && bossXDistance > -.1){
+      //   bossToken.x = bossToken.x;
+      // }
+      if(bossXDistance + 20 <= 1 && bossXDistance + 21 > -1){
+        bossToken.x = bossToken.x;
       }
-    
+      if(bossXDistance >= -20){
+        bossToken.x = bossToken.x - bossSpeed;
+      }
+      if(bossXDistance <= -20){
+        bossToken.x = bossToken.x + bossSpeed;
+      }
+      if(bossYDistance > -20){
+        bossToken.y = bossToken.y - bossSpeed + scrollSpeed;
+      }
+      if(bossYDistance < -20){
+        bossToken.y = bossToken.y + bossSpeed;
+      }
+      if(bossToken.y > 640){
+        bossToken.health = 0;
+        if(bossToken.health === 0){
+          alert("You Escaped!");
+          level = level+1;
+          window.cancelAnimationFrame(scroll);
+          enemyList = [];
+          trooper.src = 'trooper.png';
+          scrollSpeed = 1.25;
+        }
+      }
+      if(bossXDistance > -21 && bossXDistance < 21 && bossYDistance >= -20 && bossYDistance <= -20){
+        
+        alert("You were captured by Grand Admiral Moff Gideon! Game Over Score: "+score);
+        window.location.reload();
+      }
+    }
+    function drawBoss() {
+      board_ctx.drawImage(boss, bossToken.x, bossToken.y, 60, 60);
+    }
+    function bossFight(){  
+      enemyList = [];
+      // gen_enemy();
+      loop();
+    }
     // const has_eaten_food = food_x > playerToken[0].x-5 && food_y > playerToken[0].y-5 && food_x < playerToken[0].x + 20 && food_y < playerToken[0].y +20;
       
     
