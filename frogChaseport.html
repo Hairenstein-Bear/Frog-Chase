@@ -258,14 +258,14 @@
     function drawScore(){
       let text = "Score: " + score;
       board_ctx.fillStyle= "ivory";
-      board_ctx.font = "italic bold 35pt mandalore";
+      board_ctx.font = "italic bold 30pt mandalore";
       //syntax : .fillText("text", x, y)
-      board_ctx.fillText(text,30,80);
+      board_ctx.fillText(text,10,80);
     }
     function drawLevel(){
       let text = "Level: " + level;
       board_ctx.fillStyle= "ivory";
-      board_ctx.font = "italic bold 35pt mandalore";
+      board_ctx.font = "italic bold 30pt mandalore";
       //syntax : .fillText("text", x, y)
       board_ctx.fillText(text,400,80);
     }
@@ -273,9 +273,9 @@
       console.log(playerToken[0].force);
       let text = "Force: " + force;
       board_ctx.fillStyle= "ivory";
-      board_ctx.font = "italic bold 35pt mandalore";
+      board_ctx.font = "italic bold 30pt mandalore";
       //syntax : .fillText("text", x, y)
-      board_ctx.fillText(text,235,80);
+      board_ctx.fillText(text,225,80);
     }
     function drawUI(){
       drawScore();
@@ -297,7 +297,7 @@
       if(enemyList.length < 25){
         if(level % 5 === 0){
           let enemy = {
-          "x": random_food(150, board.width - 150),
+          "x": random_food(200, board.width - 200),
           "y": random_food(0, board.height - 10)
           }
       }
@@ -320,7 +320,7 @@
       if(frogList.length < 5){
         if(level % 5 === 0){
           let frog = {
-        "x": random_food(50, board.width - 50),
+        "x": random_food(100, board.width - 100),
         "y": random_food(0, board.height - 10)
       }
       frogList.unshift(frog);
@@ -531,8 +531,10 @@
       }
     }
     function move_player() {
-      console.log("player token"+playerToken[0].y);
-        console.log("boss token"+bossToken.y);
+      console.log("player token"+Math.round(playerToken[0].y));
+      console.log("boss token"+Math.round(bossToken.y));  
+      console.log("player token"+Math.round(playerToken[0].x));
+      console.log("boss token"+Math.round(bossToken.x)); 
       const head = {x: playerToken[0].x + movement.dx, y: playerToken[0].y + movement.dy};
       // remove then create new token
       playerToken.unshift(head);
@@ -541,29 +543,49 @@
       wall_hit();
     }
     function moveBoss(){
-        let bossSpeed = 3.5 - scrollSpeed ;
-        let bossXDistance = bossToken.x - playerToken[0].x; 
-        let bossYDistance = bossToken.y - playerToken[0].y;
-                         
+        let bossSpeed = 3.25 - scrollSpeed ;
+        if(bossSpeed < 1.8){
+          bossSpeed = 1.8;
+        }
+        let bossXDistance = (bossToken.x) - playerToken[0].x;
+        let bossXCheck = bossXDistance;
+        if (bossXDistance < 0){
+          let bossXCheck = (bossXDistance * -1);
+          console.log("working")
+        }
+          let bossYDistance = bossToken.y - playerToken[0].y;
+          let bossYCheck = bossYDistance;
+        if (bossYDistance < 0){
+          let bossYCheck = bossYDistance * -1;
+        }
+        let bossCenter = Math.round(bossToken.x + 20);
+        let bossYCollider = Math.round(bossToken.y + 20); 
+        console.log(bossYCheck+" "+bossXCheck)   
         // let bossYSpeed = 1.75 - scrollSpeed ;
         // bossToken.y = bossToken.y - bossSpeed;
       // if(bossXDistance === 0 || bossXDistance < .1 && bossXDistance > -.1){
       //   bossToken.x = bossToken.x;
       // }
-      if(bossXDistance + 20 <= 1 && bossXDistance + 21 > -1){
-        bossToken.x = bossToken.x;
+      // if(bossXDistance + 20 <= 1 && bossXDistance + 21 > -1){
+      //   bossToken.x = bossToken.x;
+      // }
+      if(bossCenter > playerToken[0].x){
+        bossToken.x = bossToken.x - .75;
       }
-      if(bossXDistance >= -20){
-        bossToken.x = bossToken.x - bossSpeed;
+      if(bossCenter + 30 < playerToken[0].x){
+        bossToken.x = bossToken.x + .75;
       }
-      if(bossXDistance <= -20){
-        bossToken.x = bossToken.x + bossSpeed;
-      }
+      // if(bossXDistance >= 0){
+      //   bossToken.x = bossToken.x - .75;
+      // }
+      // if(bossXDistance < 0){
+      //   bossToken.x = bossToken.x + .75;
+      // }
       if(bossYDistance > -20){
         bossToken.y = bossToken.y - bossSpeed + scrollSpeed;
       }
       if(bossYDistance < -20){
-        bossToken.y = bossToken.y + bossSpeed;
+        bossToken.y = bossToken.y + bossSpeed -1.25;
       }
       if(bossToken.y > 640){
         bossToken.health = 0;
@@ -576,8 +598,8 @@
           scrollSpeed = 1.25;
         }
       }
-      if(bossXDistance > -21 && bossXDistance < 21 && bossYDistance >= -20 && bossYDistance <= -20){
-        
+      if(bossYCheck < .2 && bossYCheck > -50 && bossXCheck > -50 && bossXCheck < 0){
+        console.log("lose");
         alert("You were captured by Grand Admiral Moff Gideon! Game Over Score: "+score);
         window.location.reload();
       }
